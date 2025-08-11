@@ -1,0 +1,131 @@
+---
+import "../styles/global.css";
+---
+<div id="topbar" class="flex flex-wrap items-baseline gap-x-2 gap-y-2 mt-4 ml-8">
+  <span class="brand tracking-[0.45em] uppercase text-black"><a href="/">p o p s y n</a></span>
+  <span class="text-black">|</span>
+  <span class="bg-yellow-200 px-1 text-black">see how it sounds</span>
+  <span class="text-black">|</span>
+  <a href="https://github.com/scherepi/PopSyn" class="terminal-link">github</a>
+  <span class="text-black">|</span>
+</div>
+
+<div class="px-4 sm:px-8 md:px-8">
+  <div class="md:grid md:grid-cols-3 md:gap-6">
+    <section class="intro-terminal px-4 py-6 sm:px-8 sm:py-10 md:px-0 md:col-span-1">
+      <p class="terminal-red mt-3">
+        add your own syn — pick a hex color that feels like the song and tell us why.
+      </p>
+    </section>
+
+    <div id="add-section" class="mt-6 px-2 font-syne-mono md:mt-0 md:px-0 md:col-span-2 md:col-start-2 ml-40 border-image-left">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center">
+          <label for="hex-input" class="mr-3">hex</label>
+          <input id="hex-input" type="text" placeholder="#ff00aa" class="border border-black px-2 py-1 flex-1 ml-10" />
+          <button id="add-btn" class="ml-2 px-6 py-1 border border-black bg-black text-white">>>></button>
+        </div>
+
+        <div id="preview" class="flex items-center mt-2">
+          <div id="swatch" class="w-40 h-40 mr-3 flex-shrink-0 border border-black bg-gray-200"></div>
+          <div class="flex-1">
+            <div id="hex-text" class="text-sm text-gray-600">—</div>
+            <div id="hex-error" class="text-sm text-red-600 hidden">invalid hex</div>
+          </div>
+        </div>
+
+        <div class="flex items-start mt-4">
+          <label for="why-input" class="mr-3 mt-2">tell us why</label>
+          <textarea id="why-input" rows="3" placeholder="why" class="border border-black px-2 py-1 flex-1 ml-10"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // @ts-nocheck
+  const $ = (id) => document.getElementById(id);
+  const topbar = $('topbar');
+  const addSection = $('add-section');
+  const hexInput = $('hex-input');
+  const swatch = $('swatch');
+  const hexText = $('hex-text');
+  const hexError = $('hex-error');
+  const whyInput = document.getElementById('why-input');
+
+  function setAddSectionHeight() {
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const th = topbar ? topbar.getBoundingClientRect().height : 0;
+    const h = Math.max(0, Math.floor((2 / 3) * (vh - th)));
+    if (addSection) addSection.style.minHeight = h + 'px';
+  }
+
+  function normalizeHex(value) {
+    if (!value) return '';
+    const v = value.trim().replace(/^#/,'');
+    if (/^[0-9a-fA-F]{3}$/.test(v)) {
+      return '#' + v.split('').map((c) => c + c).join('').toLowerCase();
+    }
+    if (/^[0-9a-fA-F]{6}$/.test(v)) {
+      return '#' + v.toLowerCase();
+    }
+    return '';
+  }
+
+  function updatePreview() {
+    const norm = normalizeHex(hexInput.value);
+    if (!norm) {
+      swatch.style.backgroundColor = '';
+      hexText.textContent = '—';
+      hexError.classList.remove('hidden');
+      return;
+    }
+    swatch.style.backgroundColor = norm;
+    hexText.textContent = norm;
+    hexError.classList.add('hidden');
+  }
+
+  function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      artist: params.get('artist') || '',
+      title: params.get('title') || '',
+    };
+  }
+
+  function saveInterpretation() {
+    const { artist, title } = getQueryParams();
+    if (!artist || !title) {
+      alert('Missing artist or title');
+      return;
+    }
+    const hex = normalizeHex(hexInput.value);
+    if (!hex) {
+      alert('Enter a valid hex color');
+      return;
+    }
+    const why = (whyInput?.value || '').trim();
+    const key = `popsyn:user:${artist}::${title}`;
+    const payload = { hex, why, artist, title, savedAt: new Date().toISOString() };
+    try {
+      localStorage.setItem(key, JSON.stringify(payload));
+      window.location.href = '/';
+    } catch (e) {
+      alert('Could not save your interpretation');
+    }
+  }
+
+  const addBtn = document.getElementById('add-btn');
+  hexInput?.addEventListener('input', updatePreview);
+  addBtn?.addEventListener('click', saveInterpretation);
+  document.addEventListener('DOMContentLoaded', () => {
+    setAddSectionHeight();
+    updatePreview();
+    const { artist, title } = getQueryParams();
+    if (artist && title) {
+      document.title = `Add interpretation: ${artist} - ${title}`;
+    }
+  });
+  window.addEventListener('resize', setAddSectionHeight);
+</script>

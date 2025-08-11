@@ -19,9 +19,9 @@ import "../styles/global.css";
       </p>
     </section>
 
-    <div id="search-section" class="mt-6 px-2 font-syne-mono md:mt-0 md:px-0 md:col-span-2 md:col-start-2 ml-40">
+    <div id="search-section" class="mt-6 px-2 font-syne-mono md:mt-0 md:px-0 md:col-span-2 md:col-start-2 ml-40 border-image-left ">
       <div class="flex items-center">
-        <input id="song-query" type="text" placeholder="name your song" class="border border-black px-2 py-1 flex-1 " />
+        <input id="song-query" type="text" placeholder="name your song" class="border border-black px-2 py-1 flex-1 ml-10" />
         <button id="search-btn" class="ml-2 px-6 py-1 border mx-42 border-black bg-black text-white">>>></button>
       </div>
       <div id="song-result" class="mt-4 w-full hidden">
@@ -31,8 +31,14 @@ import "../styles/global.css";
           <div class="flex-1">
             <div id="title" class="font-syne-semibold">—</div>
             <div id="artist" class="text-sm text-gray-600">—</div>
+            <div id="color-display" class="w-20 h-20 mt-2 border border-black hidden"></div>
+            <div id="why-display" class="mt-2 text-sm hidden"></div>
         </div>
         <div id="no-results" class="text-sm text-gray-600 mt-2 hidden">no results</div>
+      </div>
+      <div class="mt-4">
+        <a id="add-link" href="/add" class="border border-black px-2 py-1 absolute bottom-30 right-70 ">add your own interpretation</a>
+
       </div>
     </div>
   </div>
@@ -51,12 +57,41 @@ import "../styles/global.css";
   const title = $('title');
   const artist = $('artist');
   const noResults = $('no-results');
+  const colorDisplay = $('color-display');
+  const whyDisplay = $('why-display');
+  const addLink = $('add-link');
+
+  // Hardcoded demo songs to avoid any external APIs
+  const DEMO_SONGS = [
+    {
+      artistName: 'Rick Astley',
+      trackName: 'Never Gonna Give You Up',
+      artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/0a/4e/59/0a4e59e0-b9f7-7a7f-3c6b-3c38f8928e61/source/200x200bb.jpg'
+    },
+    { artistName: 'Billie Eilish', trackName: 'bad guy', artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music123/v4/1f/2e/9d/1f2e9d9e-2a1a-2b3a-7d1a-6a44f2a2e7d7/source/200x200bb.jpg' },
+    { artistName: 'Daft Punk', trackName: 'Harder, Better, Faster, Stronger', artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/6e/19/6a/6e196a4b-6f6a-bfdd-5e04-3d0a2c6a9e9f/source/200x200bb.jpg' },
+    { artistName: 'Adele', trackName: 'Hello', artworkUrl: 'https://is3-ssl.mzstatic.com/image/thumb/Music71/v4/44/24/7e/44247e2d-2e86-8b49-5fe6-7a3f63c2a3d5/source/200x200bb.jpg' },
+    { artistName: 'Kendrick Lamar', trackName: 'HUMBLE.', artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music127/v4/25/78/ce/2578ce3a-8e0d-b57a-3e6a-1e8a58d4b9b1/source/200x200bb.jpg' },
+    { artistName: 'Taylor Swift', trackName: 'Shake It Off', artworkUrl: 'https://is3-ssl.mzstatic.com/image/thumb/Music125/v4/6d/6a/50/6d6a50e9-3f66-2cb6-9af3-9a997ecfefa2/source/200x200bb.jpg' }
+  ];
 
   function setSearchSectionHeight() {
     const vh = window.innerHeight || document.documentElement.clientHeight;
     const th = topbar ? topbar.getBoundingClientRect().height : 0;
     const h = Math.max(0, Math.floor((2 / 3) * (vh - th)));
     if (searchSection) searchSection.style.minHeight = h + 'px';
+  }
+  
+  function pseudoColorFromString(str) {
+    // Simple deterministic hash -> color
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+    }
+    const r = (hash & 0xFF);
+    const g = (hash >> 8) & 0xFF;
+    const b = (hash >> 16) & 0xFF;
+    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
   }
 
   async function searchSong(q) {
@@ -68,50 +103,91 @@ import "../styles/global.css";
     cover.src = '';
     cover.classList.add('hidden');
     coverPh.classList.remove('hidden');
-    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=1`;
+    colorDisplay.classList.add('hidden');
+
+    // Try iTunes API first for accurate cover art
+    let item = null;
     try {
-      const res = await fetch(url);
+      const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=1`;
+      const res = await fetch(itunesUrl);
       const data = await res.json();
-      const item = data?.results?.[0];
-
-      if (!item) {
-        title.textContent = '—';
-        artist.textContent = '—';
-        cover.src = '';
-        cover.classList.add('hidden');
-        coverPh.classList.remove('hidden');
-        noResults.classList.remove('hidden');
-        return;
-      }
-
-      title.textContent = item.trackName ?? '—';
-      artist.textContent = item.artistName ?? '—';
-      const art = (item.artworkUrl100 || '').replace('100x100bb', '200x200bb');
-      if (art) {
-        cover.src = art;
-        cover.onload = () => {
-          cover.classList.remove('hidden');
-          coverPh.classList.add('hidden');
+      const r = data?.results?.[0];
+      if (r) {
+        item = {
+          artistName: r.artistName,
+          trackName: r.trackName,
+          artworkUrl: (r.artworkUrl100 || '').replace('100x100bb', '200x200bb')
         };
-        cover.onerror = () => {
-          cover.src = '';
-          cover.classList.add('hidden');
-          coverPh.classList.remove('hidden');
-        };
-      } else {
-        cover.src = '';
-        cover.classList.add('hidden');
-        coverPh.classList.remove('hidden');
       }
-    } catch (e) {
+    } catch {}
+
+    // Fallback to local demo list if API fails/no match
+    if (!item) {
+      const query = q.toLowerCase();
+      item = DEMO_SONGS.find(s => `${s.artistName} ${s.trackName}`.toLowerCase().includes(query)) || null;
+    }
+
+    if (!item) {
       title.textContent = '—';
       artist.textContent = '—';
       cover.src = '';
       cover.classList.add('hidden');
       coverPh.classList.remove('hidden');
       noResults.classList.remove('hidden');
+      return;
+    }
+
+    title.textContent = item.trackName ?? '—';
+    artist.textContent = item.artistName ?? '—';
+
+    // Fake analysis: derive a consistent color from the artist+title
+    const key = `${item.artistName}::${item.trackName}`;
+    const userKey = `popsyn:user:${key}`;
+
+    // Get user interpretation from localStorage if present
+    let userData = null;
+    try { userData = JSON.parse(localStorage.getItem(userKey) || 'null'); } catch {}
+
+    const colorHex = userData?.hex || pseudoColorFromString(key);
+
+    // Cover art: prefer remote art; keep placeholder if it fails
+    const art = item.artworkUrl || '';
+    const showCoverOk = () => {
+      cover.classList.remove('hidden');
+      coverPh.classList.add('hidden');
+    };
+    if (art) {
+      cover.src = art;
+      cover.onload = showCoverOk;
+      cover.onerror = () => {
+        cover.src = '';
+        cover.classList.add('hidden');
+        coverPh.classList.remove('hidden');
+      };
+    } else {
+      cover.src = '';
+      cover.classList.add('hidden');
+      coverPh.classList.remove('hidden');
+    }
+    colorDisplay.style.backgroundColor = colorHex;
+    colorDisplay.classList.remove('hidden');
+
+    if (userData?.why) {
+      whyDisplay.textContent = userData.why;
+      whyDisplay.classList.remove('hidden');
+    } else {
+      whyDisplay.textContent = '';
+      whyDisplay.classList.add('hidden');
+    }
+
+    // Link to add page with prefilled params
+    if (addLink) {
+      const params = new URLSearchParams({ artist: item.artistName, title: item.trackName }).toString();
+      addLink.href = `/add?${params}`;
     }
   }
+
+  // No color tile fallback: we stick with the placeholder when art isn't available
 
   button?.addEventListener('click', () => searchSong(input.value.trim()));
   input?.addEventListener('keydown', (e) => {

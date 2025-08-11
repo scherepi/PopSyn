@@ -147,3 +147,11 @@
 .intro-terminal .brand {
   letter-spacing: 0.45em;
 }
+
+
+.border-image-left {
+  border-image: url("../assets/border.png") 30 round;
+  border-left-width: 10px;
+  border-left-style: solid;
+  border-left-color: transparent;
+}
