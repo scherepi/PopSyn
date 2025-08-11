@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 ---
-<div class="flex flex-wrap items-baseline gap-x-2 gap-y-2 mt-4 ml-8">
+<div id="topbar" class="flex flex-wrap items-baseline gap-x-2 gap-y-2 mt-4 ml-8">
 	<span class="brand tracking-[0.45em] uppercase text-black">p o p s y n</span>
 	<span class="text-black">|</span>
 	<span class="bg-yellow-200 px-1 text-black">see how it sounds</span>
@@ -19,9 +19,103 @@ import "../styles/global.css";
       </p>
     </section>
 
-    <div class="mt-6 px-2 font-syne-mono md:mt-0 md:px-0 md:col-span-1 md:col-start-3">
-      <input type="text" placeholder="name your song" class="border border-black px-2 py-1" />
-      <button class="ml-2 px-3 py-1 border border-black bg-black text-white">>>></button>
+    <div id="search-section" class="mt-6 px-2 font-syne-mono md:mt-0 md:px-0 md:col-span-2 md:col-start-2 ml-40">
+      <div class="flex items-center">
+        <input id="song-query" type="text" placeholder="name your song" class="border border-black px-2 py-1 flex-1 " />
+        <button id="search-btn" class="ml-2 px-6 py-1 border mx-42 border-black bg-black text-white">>>></button>
+      </div>
+      <div id="song-result" class="mt-4 w-full hidden">
+          <div id="cover-ph" class="w-40 h-40 bg-gray-200 mr-3 flex-shrink-0"></div>
+          <img id="cover" class="w-40 h-40 mr-3 hidden object-cover mt-10"/>
+
+          <div class="flex-1">
+            <div id="title" class="font-syne-semibold">—</div>
+            <div id="artist" class="text-sm text-gray-600">—</div>
+        </div>
+        <div id="no-results" class="text-sm text-gray-600 mt-2 hidden">no results</div>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+  // @ts-nocheck
+  const $ = (id) => document.getElementById(id);
+  const topbar = $('topbar');
+  const searchSection = $('search-section');
+  const songResult = $('song-result');
+  const input = $('song-query');
+  const button = $('search-btn');
+  const cover = $('cover');
+  const coverPh = $('cover-ph');
+  const title = $('title');
+  const artist = $('artist');
+  const noResults = $('no-results');
+
+  function setSearchSectionHeight() {
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const th = topbar ? topbar.getBoundingClientRect().height : 0;
+    const h = Math.max(0, Math.floor((2 / 3) * (vh - th)));
+    if (searchSection) searchSection.style.minHeight = h + 'px';
+  }
+
+  async function searchSong(q) {
+    if (!q) return;
+    songResult?.classList.remove('hidden');
+    noResults.classList.add('hidden');
+    title.textContent = '—';
+    artist.textContent = '—';
+    cover.src = '';
+    cover.classList.add('hidden');
+    coverPh.classList.remove('hidden');
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=1`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const item = data?.results?.[0];
+
+      if (!item) {
+        title.textContent = '—';
+        artist.textContent = '—';
+        cover.src = '';
+        cover.classList.add('hidden');
+        coverPh.classList.remove('hidden');
+        noResults.classList.remove('hidden');
+        return;
+      }
+
+      title.textContent = item.trackName ?? '—';
+      artist.textContent = item.artistName ?? '—';
+      const art = (item.artworkUrl100 || '').replace('100x100bb', '200x200bb');
+      if (art) {
+        cover.src = art;
+        cover.onload = () => {
+          cover.classList.remove('hidden');
+          coverPh.classList.add('hidden');
+        };
+        cover.onerror = () => {
+          cover.src = '';
+          cover.classList.add('hidden');
+          coverPh.classList.remove('hidden');
+        };
+      } else {
+        cover.src = '';
+        cover.classList.add('hidden');
+        coverPh.classList.remove('hidden');
+      }
+    } catch (e) {
+      title.textContent = '—';
+      artist.textContent = '—';
+      cover.src = '';
+      cover.classList.add('hidden');
+      coverPh.classList.remove('hidden');
+      noResults.classList.remove('hidden');
+    }
+  }
+
+  button?.addEventListener('click', () => searchSong(input.value.trim()));
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchSong(input.value.trim());
+  });
+  document.addEventListener('DOMContentLoaded', setSearchSectionHeight);
+</script>
