@@ -1,4 +1,5 @@
 import azapi
+import musicbrainzngs
 # API.artist = 'Rick Astley'
 # API.title = 'Never Gonna Give You Up'
 
@@ -28,7 +29,8 @@ def getLyrics(artist, title):
     return newName, newTitle, lyrics
 
 
-
+def verifyArtist(trackTitle):
+    musicbrainzngs
 
 
 print(getLyrics("Rick Astley", "never gonna give you up"))
