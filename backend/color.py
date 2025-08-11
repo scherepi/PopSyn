@@ -32,25 +32,5 @@ def emotions_to_color(emotions):
 
     return int(r), int(g), int(b)
 
-def rgb_to_hex(rgb):
+def rgb_to_hex(rgb: tuple[int, int, int]) -> str:
     return "#{:02x}{:02x}{:02x}".format(*rgb)
-
-# 🔹 Example usage:
-emotions = {
-    "fear": 1000,
-    "anger": 2,
-    "anticipation": 3,
-    "trust": 1,
-    "surprise": 0,
-    "positive": 5,
-    "negative": 0,
-    "sadness": 1,
-    "disgust": 0,
-    "joy": 7
-}
-
-color_rgb = emotions_to_color(emotions)
-color_hex = rgb_to_hex(color_rgb)
-
-print("RGB:", color_rgb)
-print("HEX:", color_hex)

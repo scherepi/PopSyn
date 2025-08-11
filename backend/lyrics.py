@@ -30,7 +30,9 @@ def getLyrics(artist, title):
 
 
 def verifyArtist(trackTitle):
-    musicbrainzngs
+    musicbrainzngs.set_useragent("PopSyn", "v0.0.1", "owner@jschere.com")
+    
+
 
 
 print(getLyrics("Rick Astley", "never gonna give you up"))
