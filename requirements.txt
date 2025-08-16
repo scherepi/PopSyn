@@ -1,6 +1,0 @@
-azapi
-musicbrainzngs
-nrclex
-numpy
-flask
-supabase

@@ -24,23 +24,73 @@ import imageUrl from "../assets/image.png";
       <p class="terminal-red text-sm">made with &lt;3 by <a href="https://github.com/XDagging" class="terminal-link">sebastian</a>, <a href="https://github.com/scherepi" class="terminal-link">joaquin</a>, and <a href="https://github.com/v1peridae" class="terminal-link">louisa</a></p>
     </section>
 
-    <div id="search-section" class="mt-6 px-2 font-syne-mono md:mt-0 md:px-0 md:col-span-2 md:col-start-2 md:pl-3 border-image-left ml-1 ">
+    <div id="search-section" class="mt-6 px-2 font-syne-mono md:mt-0 md:px-0 md:col-span-2 md:col-start-2 md:pl-3 ml-1 ">
       <div class="flex items-center justify-center">
         <input id="song-query" type="text" placeholder="name your song" class="border border-black px-2 py-1 ml-auto flex items-center" />
         <button id="search-btn" class="ml-2 px-6 py-1 border mx-42 border-black bg-black text-white">>>></button>
       </div>
-      <div id="song-result" class="mt-4 w-full hidden">
-          <div id="cover-ph" class="w-40 h-40 bg-gray-200 mr-3 flex-shrink-0"></div>
-          <img id="cover" class="w-40 h-40 mr-3 hidden object-cover mt-10"/>
-
-          <div class="flex-1">
-            <div id="title" class="font-syne-semibold">—</div>
-            <div id="artist" class="text-sm text-gray-600">—</div>
-            <div id="color-display" class="w-20 h-20 mt-2 border border-black hidden"></div>
-            <div id="why-display" class="mt-2 text-sm hidden"></div>
-        </div>
-      </div>
+	      	<div id="song-result" class="mt-4 w-full hidden">
+	      		<div class="flex items-start gap-4 justify-center mx-auto">
+	      		  <div>
+	      		  	<div id="cover-ph" class="w-55 h-55 bg-gray-200 mr-3 flex-shrink-0"></div>
+	      		  	<img id="cover" class="w-55 h-55 mr-3 hidden object-cover"/>
+	      		  	<div class="mt-2">
+	      		  		<div id="title" class="font-syne italic max-w-xs truncate">—</div>
+	      		  		<div id="artist" class="text-sm text-gray-600">—</div>
+	      		  	</div>
+	      		  </div>
+	      		  <div>
+	      		  	<div id="color-swatch" class="w-55 h-55 border border-black" title="colour preview"></div>
+	      		  	<div class="mt-3">
+	      		  		<button id="add-syn-btn" class="px-4 py-1 border border-black bg-black text-white hidden">add your own syn</button>
+	      		  	</div>
+	      		  </div>
+	      		</div>
+	      </div>
      
     </div>
   </div>
 </div>
+
+<div id="syn-modal" class="fixed inset-0 hidden z-50 bg-black/80 items-center justify-center p-4 mt-10">
+	<div class="bg-white border-1 border-black w-full max-w-xl">
+		<div class="border-b-1 border-black px-3 py-2 intro-terminal">
+			<div class="flex justify-between items-center">
+				<span class="terminal-red">add syn</span>
+				<button id="close-modal" aria-label="Close modal" class="font-syne-mono text-black hover:bg-black hover:text-white px-2">[esc]</button>
+			</div>
+		</div>
+		
+		<div class="p-3 md:p-4 pl-3 md:pl-4">
+			<div class="flex justify-between gap-6 md:gap-8 mb-3 md:mb-4">
+				<div class="flex-1 max-w-xs">
+					<div class="relative">
+						<div id="modal-color-swatch" class="w-32 h-32 cursor-pointer mx-auto border-1 border-black bg-black text-white relative" title="pick your colour">
+							<div class="absolute inset-0 flex items-center justify-center">
+								<p class="text-sm font-medium text-white">pick a colour</p>
+							</div>
+						</div>
+					</div>
+					<input id="modal-color-input" type="color" class="hidden" value="#000000" />
+				</div>
+				
+				<div class="flex-2">
+					<textarea id="syn-description" placeholder="why does it feel like that?" class="w-full h-32 border-1 border-black bg-white p-2 font-syne-mono text-black resize-none focus:outline-none focus:ring-0"></textarea>
+				</div>
+			</div>
+			<div class="flex justify-end">
+				<button id="confirm-add" class="font-syne-mono text-black border-1 border-black bg-white px-4 py-1 hover:bg-black hover:text-white ">syn(c)</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+  .modal-open {
+    overflow: hidden;
+  }
+</style>
+
+<script type="module">
+	import '/src/scripts/index.ts';
+</script>
